@@ -32,6 +32,10 @@ public class Produto {
     @Column(name = "peso_liquido", nullable = false, precision = 10, scale = 3)
     private BigDecimal pesoLiquido;
 
+    @ManyToOne(fetch = FetchType.EAGER)
+    @JoinColumn(name = "grupo_produto_codigo")
+    private GrupoProduto grupoProduto;
+
     @Column(name = "deleted_at")
     private LocalDateTime deletedAt;
 

@@ -3,6 +3,7 @@ package com.softline.api.service;
 import com.softline.api.dto.PageResponse;
 import com.softline.api.dto.ProdutoRequest;
 import com.softline.api.model.Produto;
+import com.softline.api.repository.GrupoProdutoRepository;
 import com.softline.api.repository.ProdutoRepository;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
@@ -19,6 +20,7 @@ import java.time.LocalDateTime;
 public class ProdutoService {
 
     private final ProdutoRepository repository;
+    private final GrupoProdutoRepository grupoProdutoRepository;
 
     public PageResponse<Produto> listar(String search, int page, int perPage, String sortBy, String sortDir) {
         var sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
@@ -62,6 +64,11 @@ public class ProdutoService {
         p.setValorVenda(req.valorVenda());
         p.setPesoBruto(req.pesoBruto());
         p.setPesoLiquido(req.pesoLiquido());
+        if (req.grupoProdutoCodigo() != null) {
+            p.setGrupoProduto(grupoProdutoRepository.findById(req.grupoProdutoCodigo()).orElse(null));
+        } else {
+            p.setGrupoProduto(null);
+        }
     }
 
     private <T> PageResponse<T> toPageResponse(Page<T> page, int pageNum, int perPage) {

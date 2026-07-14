@@ -24,8 +24,14 @@
     </div>
     <div class="card shadow-sm">
         <div class="card-body">
-            <div class="mb-3">
+            <div class="mb-3 d-flex gap-2">
                 <input type="text" class="form-control" placeholder="Pesquisar..." x-model="search" @input.debounce.400ms="carregar()">
+                <select class="form-select form-select-sm" style="width:auto" x-model="perPage" @change="page=1; carregar()">
+                    <option value="5">5</option>
+                    <option value="10">10</option>
+                    <option value="20">20</option>
+                    <option value="50">50</option>
+                </select>
             </div>
             <div class="table-responsive">
                 <table class="table table-hover align-middle mb-0">
@@ -76,10 +82,10 @@
 const AUTH_TOKEN = [[${authToken}]];
 function clientes() {
     return {
-        items: [], total: 0, page: 1, lastPage: 1, search: '', sortBy: 'codigo', sortDir: 'DESC', loading: false,
+        items: [], total: 0, page: 1, lastPage: 1, perPage: 10, search: '', sortBy: 'codigo', sortDir: 'DESC', loading: false,
         async carregar() {
             this.loading = true;
-            const r = await fetch(`/api/clientes?search=${this.search}&page=${this.page}&perPage=10&sortBy=${this.sortBy}&sortDir=${this.sortDir}`,
+            const r = await fetch(`/api/clientes?search=${this.search}&page=${this.page}&perPage=${this.perPage}&sortBy=${this.sortBy}&sortDir=${this.sortDir}`,
                 { headers: { Authorization: 'Bearer ' + AUTH_TOKEN } });
             const d = await r.json();
             this.items = d.data; this.total = d.total; this.lastPage = d.lastPage;

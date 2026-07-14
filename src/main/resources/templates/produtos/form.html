@@ -33,6 +33,15 @@
                 <label class="form-label">Código de Barras</label>
                 <input type="text" class="form-control" x-model="form.codigoBarras" maxlength="14">
             </div>
+            <div class="mb-3">
+                <label class="form-label">Grupo</label>
+                <select class="form-select" x-model="form.grupoProdutoCodigo">
+                    <option value="">Sem grupo</option>
+                    <template x-for="g in grupos" :key="g.codigo">
+                        <option :value="g.codigo" x-text="g.descricao"></option>
+                    </template>
+                </select>
+            </div>
             <div class="row g-3">
                 <div class="col-md-4">
                     <label class="form-label">Valor Venda *</label>
@@ -62,21 +71,32 @@
 const AUTH_TOKEN = [[${authToken}]];
 function form() {
     return {
-        id: null, form: { descricao:'', codigoBarras:'', valorVenda:'', pesoBruto:'', pesoLiquido:'' },
-        erro: '', salvando: false,
+        id: null, form: { descricao:'', codigoBarras:'', valorVenda:'', pesoBruto:'', pesoLiquido:'', grupoProdutoCodigo:'' },
+        grupos: [], erro: '', salvando: false,
         async init() {
+            const gr = await fetch('/api/grupos-produto', { headers: { Authorization: 'Bearer ' + AUTH_TOKEN } });
+            this.grupos = await gr.json();
             const m = location.pathname.match(/\/produtos\/edit\/(\d+)/);
             if (m) {
                 this.id = m[1];
                 const r = await fetch('/api/produtos/' + this.id, { headers: { Authorization: 'Bearer ' + AUTH_TOKEN } });
-                this.form = await r.json();
+                const data = await r.json();
+                this.form = {
+                    descricao: data.descricao,
+                    codigoBarras: data.codigoBarras,
+                    valorVenda: data.valorVenda,
+                    pesoBruto: data.pesoBruto,
+                    pesoLiquido: data.pesoLiquido,
+                    grupoProdutoCodigo: data.grupoProduto ? data.grupoProduto.codigo : ''
+                };
             }
         },
         async salvar() {
             this.salvando = true; this.erro = '';
+            const payload = { ...this.form, grupoProdutoCodigo: this.form.grupoProdutoCodigo || null };
             const url = this.id ? '/api/produtos/' + this.id : '/api/produtos';
             const method = this.id ? 'PUT' : 'POST';
-            const r = await fetch(url, { method, headers: { Authorization: 'Bearer ' + AUTH_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify(this.form) });
+            const r = await fetch(url, { method, headers: { Authorization: 'Bearer ' + AUTH_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
             const d = await r.json();
             if (r.ok) { location.href = '/produtos'; }
             else { this.erro = d.message || JSON.stringify(d.errors); }

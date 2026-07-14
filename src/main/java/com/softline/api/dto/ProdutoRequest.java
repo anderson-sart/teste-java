@@ -8,5 +8,6 @@ public record ProdutoRequest(
         @Size(max = 14) String codigoBarras,
         @NotNull @DecimalMin("0.0") BigDecimal valorVenda,
         @NotNull @DecimalMin("0.0") BigDecimal pesoBruto,
-        @NotNull @DecimalMin("0.0") BigDecimal pesoLiquido
+        @NotNull @DecimalMin("0.0") BigDecimal pesoLiquido,
+        Long grupoProdutoCodigo
 ) {}
