@@ -34,12 +34,16 @@ public class ClienteService {
     }
 
     public Cliente criar(ClienteRequest req) {
+        if (!DocumentoValidator.isValid(req.documento()))
+            throw new IllegalArgumentException("CPF ou CNPJ inválido.");
         var cliente = new Cliente();
         mapear(cliente, req);
         return repository.save(cliente);
     }
 
     public Cliente atualizar(Long id, ClienteRequest req) {
+        if (!DocumentoValidator.isValid(req.documento()))
+            throw new IllegalArgumentException("CPF ou CNPJ inválido.");
         var cliente = buscar(id);
         mapear(cliente, req);
         return repository.save(cliente);
