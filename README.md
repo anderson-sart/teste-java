@@ -13,6 +13,26 @@ docker compose up -d
 Acesse: http://localhost:8080
 **Login**: admin | **Senha**: admin123
 
+## 🔄 Atualizar ambiente local
+
+Após fazer `git pull` com novas alterações:
+
+```bash
+# 1. Baixar alterações
+git pull
+
+# 2. Rebuild da imagem e reiniciar
+docker compose up -d --build
+```
+
+Se houver novas migrations (arquivos `V*__*.sql`), o Flyway aplica automaticamente no startup.
+
+Se precisar recriar o banco do zero (perder dados):
+```bash
+docker compose down -v   # remove volumes
+docker compose up -d --build
+```
+
 ## Tecnologias
 
 - **Java 21** + **Spring Boot 3.3**
