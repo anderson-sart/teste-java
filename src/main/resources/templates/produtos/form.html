@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Produto - Softline</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="/menu">Softline</a>
+        <div class="navbar-nav flex-row gap-3">
+            <a class="nav-link active" href="/produtos">Produtos</a>
+            <a class="nav-link" href="/clientes">Clientes</a>
+            <a class="nav-link text-danger" href="/logout">Sair</a>
+        </div>
+    </div>
+</nav>
+<div class="container mt-4" style="max-width:600px" x-data="form()" x-init="init()">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0" x-text="id ? 'Editar Produto' : 'Novo Produto'"></h4>
+        <a href="/produtos" class="btn btn-sm btn-outline-secondary"><i class="bi bi-arrow-left"></i> Voltar</a>
+    </div>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div x-show="erro" class="alert alert-danger" x-text="erro"></div>
+            <div class="mb-3">
+                <label class="form-label">Descrição *</label>
+                <input type="text" class="form-control" x-model="form.descricao" maxlength="60">
+            </div>
+            <div class="mb-3">
+                <label class="form-label">Código de Barras</label>
+                <input type="text" class="form-control" x-model="form.codigoBarras" maxlength="14">
+            </div>
+            <div class="row g-3">
+                <div class="col-md-4">
+                    <label class="form-label">Valor Venda *</label>
+                    <input type="number" step="0.01" class="form-control" x-model="form.valorVenda">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Peso Bruto *</label>
+                    <input type="number" step="0.001" class="form-control" x-model="form.pesoBruto">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label">Peso Líquido *</label>
+                    <input type="number" step="0.001" class="form-control" x-model="form.pesoLiquido">
+                </div>
+            </div>
+            <div class="mt-4 d-flex gap-2">
+                <button class="btn btn-primary" @click="salvar()" :disabled="salvando">
+                    <span x-show="salvando" class="spinner-border spinner-border-sm me-1"></span>
+                    Salvar
+                </button>
+                <a href="/produtos" class="btn btn-outline-secondary">Cancelar</a>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<script>
+function form() {
+    return {
+        id: null, form: { descricao:'', codigoBarras:'', valorVenda:'', pesoBruto:'', pesoLiquido:'' },
+        erro: '', salvando: false,
+        token() { return document.cookie.split(';').find(c => c.trim().startsWith('auth_token='))?.split('=')[1] || ''; },
+        async init() {
+            const m = location.pathname.match(/\/produtos\/edit\/(\d+)/);
+            if (m) {
+                this.id = m[1];
+                const r = await fetch('/api/produtos/' + this.id, { headers: { Authorization: 'Bearer ' + this.token() } });
+                this.form = await r.json();
+            }
+        },
+        async salvar() {
+            this.salvando = true; this.erro = '';
+            const url = this.id ? '/api/produtos/' + this.id : '/api/produtos';
+            const method = this.id ? 'PUT' : 'POST';
+            const r = await fetch(url, { method, headers: { Authorization: 'Bearer ' + this.token(), 'Content-Type': 'application/json' }, body: JSON.stringify(this.form) });
+            const d = await r.json();
+            if (r.ok) { location.href = '/produtos'; }
+            else { this.erro = d.message || JSON.stringify(d.errors); }
+            this.salvando = false;
+        }
+    }
+}
+</script>
+</body>
+</html>

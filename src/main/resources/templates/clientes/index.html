@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="pt-BR" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Clientes - Softline</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.0/font/bootstrap-icons.css" rel="stylesheet">
+</head>
+<body class="bg-light">
+<nav class="navbar navbar-dark bg-dark">
+    <div class="container-fluid">
+        <a class="navbar-brand fw-bold" href="/menu">Softline</a>
+        <div class="navbar-nav flex-row gap-3">
+            <a class="nav-link" href="/produtos">Produtos</a>
+            <a class="nav-link active" href="/clientes">Clientes</a>
+            <a class="nav-link text-danger" href="/logout">Sair</a>
+        </div>
+    </div>
+</nav>
+<div class="container mt-4" x-data="clientes()" x-init="carregar()">
+    <div class="d-flex justify-content-between align-items-center mb-3">
+        <h4 class="mb-0">Clientes</h4>
+        <a href="/clientes/create" class="btn btn-primary btn-sm"><i class="bi bi-plus-lg"></i> Novo</a>
+    </div>
+    <div class="card shadow-sm">
+        <div class="card-body">
+            <div class="mb-3">
+                <input type="text" class="form-control" placeholder="Pesquisar..." x-model="search" @input.debounce.400ms="carregar()">
+            </div>
+            <div class="table-responsive">
+                <table class="table table-hover align-middle mb-0">
+                    <thead class="table-light">
+                        <tr>
+                            <th @click="ordenar('codigo')" style="cursor:pointer">Código <i class="bi bi-arrow-down-up"></i></th>
+                            <th @click="ordenar('nome')" style="cursor:pointer">Nome <i class="bi bi-arrow-down-up"></i></th>
+                            <th>Fantasia</th>
+                            <th>Documento</th>
+                            <th>Ações</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <template x-if="loading">
+                            <tr><td colspan="5" class="text-center py-4"><div class="spinner-border spinner-border-sm"></div></td></tr>
+                        </template>
+                        <template x-for="c in items" :key="c.codigo">
+                            <tr>
+                                <td x-text="c.codigo"></td>
+                                <td x-text="c.nome"></td>
+                                <td x-text="c.fantasia || '-'"></td>
+                                <td x-text="c.documento"></td>
+                                <td>
+                                    <a :href="'/clientes/edit/' + c.codigo" class="btn btn-sm btn-outline-primary me-1"><i class="bi bi-pencil"></i></a>
+                                    <button @click="deletar(c.codigo)" class="btn btn-sm btn-outline-danger"><i class="bi bi-trash"></i></button>
+                                </td>
+                            </tr>
+                        </template>
+                        <template x-if="!loading && items.length === 0">
+                            <tr><td colspan="5" class="text-center text-muted py-4">Nenhum registro encontrado</td></tr>
+                        </template>
+                    </tbody>
+                </table>
+            </div>
+            <div class="d-flex justify-content-between align-items-center mt-3">
+                <small class="text-muted" x-text="`${total} registro(s)`"></small>
+                <div class="d-flex gap-1">
+                    <button class="btn btn-sm btn-outline-secondary" :disabled="page <= 1" @click="page--; carregar()">‹</button>
+                    <span class="btn btn-sm btn-light disabled" x-text="`${page} / ${lastPage}`"></span>
+                    <button class="btn btn-sm btn-outline-secondary" :disabled="page >= lastPage" @click="page++; carregar()">›</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
+<script>
+function clientes() {
+    return {
+        items: [], total: 0, page: 1, lastPage: 1, search: '', sortBy: 'codigo', sortDir: 'DESC', loading: false,
+        token() { return document.cookie.split(';').find(c => c.trim().startsWith('auth_token='))?.split('=')[1] || ''; },
+        async carregar() {
+            this.loading = true;
+            const r = await fetch(`/api/clientes?search=${this.search}&page=${this.page}&perPage=10&sortBy=${this.sortBy}&sortDir=${this.sortDir}`,
+                { headers: { Authorization: 'Bearer ' + this.token() } });
+            const d = await r.json();
+            this.items = d.data; this.total = d.total; this.lastPage = d.lastPage;
+            this.loading = false;
+        },
+        ordenar(col) { this.sortBy = col; this.sortDir = this.sortDir === 'ASC' ? 'DESC' : 'ASC'; this.page = 1; this.carregar(); },
+        async deletar(id) {
+            if (!confirm('Excluir cliente?')) return;
+            await fetch('/api/clientes/' + id, { method: 'DELETE', headers: { Authorization: 'Bearer ' + this.token() } });
+            this.carregar();
+        }
+    }
+}
+</script>
+</body>
+</html>
