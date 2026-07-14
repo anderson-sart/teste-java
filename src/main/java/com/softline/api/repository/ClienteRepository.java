@@ -8,12 +8,22 @@ import org.springframework.data.jpa.repository.Query;
 
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
 
-    @Query("""
-        SELECT c FROM Cliente c
-        WHERE unaccent(CAST(c.nome AS string)) ILIKE unaccent(CONCAT('%', :search, '%'))
-           OR unaccent(CAST(c.fantasia AS string)) ILIKE unaccent(CONCAT('%', :search, '%'))
-           OR unaccent(CAST(c.documento AS string)) ILIKE unaccent(CONCAT('%', :search, '%'))
-           OR CAST(c.codigo AS string) LIKE CONCAT('%', :search, '%')
-        """)
+    @Query(value = """
+        SELECT * FROM clientes
+        WHERE deleted_at IS NULL
+          AND (unaccent(nome) ILIKE unaccent(CONCAT('%', :search, '%'))
+            OR unaccent(COALESCE(fantasia,'')) ILIKE unaccent(CONCAT('%', :search, '%'))
+            OR unaccent(documento) ILIKE unaccent(CONCAT('%', :search, '%'))
+            OR CAST(codigo AS TEXT) LIKE CONCAT('%', :search, '%'))
+        """,
+        countQuery = """
+        SELECT COUNT(*) FROM clientes
+        WHERE deleted_at IS NULL
+          AND (unaccent(nome) ILIKE unaccent(CONCAT('%', :search, '%'))
+            OR unaccent(COALESCE(fantasia,'')) ILIKE unaccent(CONCAT('%', :search, '%'))
+            OR unaccent(documento) ILIKE unaccent(CONCAT('%', :search, '%'))
+            OR CAST(codigo AS TEXT) LIKE CONCAT('%', :search, '%'))
+        """,
+        nativeQuery = true)
     Page<Cliente> search(String search, Pageable pageable);
 }
