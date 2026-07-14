@@ -58,17 +58,17 @@
     </div>
 </div>
 <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-<script>
+<script th:inline="javascript">
+const AUTH_TOKEN = [[${authToken}]];
 function form() {
     return {
         id: null, form: { descricao:'', codigoBarras:'', valorVenda:'', pesoBruto:'', pesoLiquido:'' },
         erro: '', salvando: false,
-        token() { return document.cookie.split(';').find(c => c.trim().startsWith('auth_token='))?.split('=')[1] || ''; },
         async init() {
             const m = location.pathname.match(/\/produtos\/edit\/(\d+)/);
             if (m) {
                 this.id = m[1];
-                const r = await fetch('/api/produtos/' + this.id, { headers: { Authorization: 'Bearer ' + this.token() } });
+                const r = await fetch('/api/produtos/' + this.id, { headers: { Authorization: 'Bearer ' + AUTH_TOKEN } });
                 this.form = await r.json();
             }
         },
@@ -76,7 +76,7 @@ function form() {
             this.salvando = true; this.erro = '';
             const url = this.id ? '/api/produtos/' + this.id : '/api/produtos';
             const method = this.id ? 'PUT' : 'POST';
-            const r = await fetch(url, { method, headers: { Authorization: 'Bearer ' + this.token(), 'Content-Type': 'application/json' }, body: JSON.stringify(this.form) });
+            const r = await fetch(url, { method, headers: { Authorization: 'Bearer ' + AUTH_TOKEN, 'Content-Type': 'application/json' }, body: JSON.stringify(this.form) });
             const d = await r.json();
             if (r.ok) { location.href = '/produtos'; }
             else { this.erro = d.message || JSON.stringify(d.errors); }

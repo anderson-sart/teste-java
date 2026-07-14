@@ -72,15 +72,15 @@
     </div>
 </div>
 <script src="https://unpkg.com/alpinejs@3.x.x/dist/cdn.min.js" defer></script>
-<script>
+<script th:inline="javascript">
+const AUTH_TOKEN = [[${authToken}]];
 function produtos() {
     return {
         items: [], total: 0, page: 1, lastPage: 1, search: '', sortBy: 'codigo', sortDir: 'DESC', loading: false,
-        token() { return document.cookie.split(';').find(c => c.trim().startsWith('auth_token='))?.split('=')[1] || ''; },
         async carregar() {
             this.loading = true;
             const r = await fetch(`/api/produtos?search=${this.search}&page=${this.page}&perPage=10&sortBy=${this.sortBy}&sortDir=${this.sortDir}`,
-                { headers: { Authorization: 'Bearer ' + this.token() } });
+                { headers: { Authorization: 'Bearer ' + AUTH_TOKEN } });
             const d = await r.json();
             this.items = d.data; this.total = d.total; this.lastPage = d.lastPage;
             this.loading = false;
@@ -88,7 +88,7 @@ function produtos() {
         ordenar(col) { this.sortBy = col; this.sortDir = this.sortDir === 'ASC' ? 'DESC' : 'ASC'; this.page = 1; this.carregar(); },
         async deletar(id) {
             if (!confirm('Excluir produto?')) return;
-            await fetch('/api/produtos/' + id, { method: 'DELETE', headers: { Authorization: 'Bearer ' + this.token() } });
+            await fetch('/api/produtos/' + id, { method: 'DELETE', headers: { Authorization: 'Bearer ' + AUTH_TOKEN } });
             this.carregar();
         }
     }

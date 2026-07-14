@@ -20,12 +20,12 @@ public class WebController {
 
     @GetMapping("/")
     public String root(HttpServletRequest request) {
-        return hasToken(request) ? "redirect:/menu" : "redirect:/login";
+        return getToken(request) != null ? "redirect:/menu" : "redirect:/login";
     }
 
     @GetMapping("/login")
     public String loginPage(HttpServletRequest request) {
-        return hasToken(request) ? "redirect:/menu" : "login";
+        return getToken(request) != null ? "redirect:/menu" : "login";
     }
 
     @PostMapping("/login")
@@ -36,7 +36,7 @@ public class WebController {
         try {
             var result = authService.login(new LoginRequest(username, password));
             var cookie = new Cookie("auth_token", result.token());
-            cookie.setHttpOnly(false);
+            cookie.setHttpOnly(true);
             cookie.setPath("/");
             cookie.setMaxAge(86400);
             response.addCookie(cookie);
@@ -57,43 +57,52 @@ public class WebController {
     }
 
     @GetMapping("/menu")
-    public String menu(HttpServletRequest request) {
-        return hasToken(request) ? "menu" : "redirect:/login";
+    public String menu(HttpServletRequest request, Model model) {
+        return withAuth(request, model, "menu");
     }
 
     @GetMapping("/produtos")
-    public String produtos(HttpServletRequest request) {
-        return hasToken(request) ? "produtos/index" : "redirect:/login";
+    public String produtos(HttpServletRequest request, Model model) {
+        return withAuth(request, model, "produtos/index");
     }
 
     @GetMapping("/produtos/create")
-    public String produtosCreate(HttpServletRequest request) {
-        return hasToken(request) ? "produtos/form" : "redirect:/login";
+    public String produtosCreate(HttpServletRequest request, Model model) {
+        return withAuth(request, model, "produtos/form");
     }
 
     @GetMapping("/produtos/edit/{id}")
-    public String produtosEdit(HttpServletRequest request) {
-        return hasToken(request) ? "produtos/form" : "redirect:/login";
+    public String produtosEdit(HttpServletRequest request, Model model) {
+        return withAuth(request, model, "produtos/form");
     }
 
     @GetMapping("/clientes")
-    public String clientes(HttpServletRequest request) {
-        return hasToken(request) ? "clientes/index" : "redirect:/login";
+    public String clientes(HttpServletRequest request, Model model) {
+        return withAuth(request, model, "clientes/index");
     }
 
     @GetMapping("/clientes/create")
-    public String clientesCreate(HttpServletRequest request) {
-        return hasToken(request) ? "clientes/form" : "redirect:/login";
+    public String clientesCreate(HttpServletRequest request, Model model) {
+        return withAuth(request, model, "clientes/form");
     }
 
     @GetMapping("/clientes/edit/{id}")
-    public String clientesEdit(HttpServletRequest request) {
-        return hasToken(request) ? "clientes/form" : "redirect:/login";
+    public String clientesEdit(HttpServletRequest request, Model model) {
+        return withAuth(request, model, "clientes/form");
     }
 
-    private boolean hasToken(HttpServletRequest request) {
-        if (request.getCookies() == null) return false;
+    private String withAuth(HttpServletRequest request, Model model, String view) {
+        String token = getToken(request);
+        if (token == null) return "redirect:/login";
+        model.addAttribute("authToken", token);
+        return view;
+    }
+
+    private String getToken(HttpServletRequest request) {
+        if (request.getCookies() == null) return null;
         return Arrays.stream(request.getCookies())
-                .anyMatch(c -> "auth_token".equals(c.getName()) && !c.getValue().isBlank());
+                .filter(c -> "auth_token".equals(c.getName()) && !c.getValue().isBlank())
+                .map(Cookie::getValue)
+                .findFirst().orElse(null);
     }
 }
