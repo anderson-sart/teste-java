@@ -6,7 +6,18 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 
+import java.util.Optional;
+
 public interface ClienteRepository extends JpaRepository<Cliente, Long> {
+
+    @Query(value = """
+        SELECT * FROM clientes
+        WHERE deleted_at IS NULL
+          AND regexp_replace(documento, '\\D', '', 'g') = regexp_replace(:documento, '\\D', '', 'g')
+          AND (:excludeId IS NULL OR codigo != :excludeId)
+        LIMIT 1
+        """, nativeQuery = true)
+    Optional<Cliente> findByDocumento(String documento, Long excludeId);
 
     @Query(value = """
         SELECT * FROM clientes

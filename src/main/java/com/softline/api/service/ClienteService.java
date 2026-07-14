@@ -36,6 +36,8 @@ public class ClienteService {
     public Cliente criar(ClienteRequest req) {
         if (!DocumentoValidator.isValid(req.documento()))
             throw new IllegalArgumentException("CPF ou CNPJ inválido.");
+        if (repository.findByDocumento(req.documento(), null).isPresent())
+            throw new IllegalArgumentException("Documento já cadastrado.");
         var cliente = new Cliente();
         mapear(cliente, req);
         return repository.save(cliente);
@@ -44,6 +46,8 @@ public class ClienteService {
     public Cliente atualizar(Long id, ClienteRequest req) {
         if (!DocumentoValidator.isValid(req.documento()))
             throw new IllegalArgumentException("CPF ou CNPJ inválido.");
+        if (repository.findByDocumento(req.documento(), id).isPresent())
+            throw new IllegalArgumentException("Documento já cadastrado.");
         var cliente = buscar(id);
         mapear(cliente, req);
         return repository.save(cliente);
