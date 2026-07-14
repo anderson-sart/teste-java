@@ -36,7 +36,7 @@ public class WebController {
         try {
             var result = authService.login(new LoginRequest(username, password));
             var cookie = new Cookie("auth_token", result.token());
-            cookie.setHttpOnly(true);
+            cookie.setHttpOnly(false);
             cookie.setPath("/");
             cookie.setMaxAge(86400);
             response.addCookie(cookie);
